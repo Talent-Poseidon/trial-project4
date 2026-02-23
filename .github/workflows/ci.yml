@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "staging", "epic/*" ]
+  pull_request:
+    branches: [ "main", "staging" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: "postgresql://postgres:password@localhost:5432/mydb"
+      NEXTAUTH_SECRET: "dummy_secret_for_build_process_12345"
+      NEXTAUTH_URL: "http://localhost:3000"
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 9
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Generate Prisma Client
+      run: pnpm prisma generate
+
+    - name: Lint
+      run: pnpm lint
+
+    - name: Build
+      run: pnpm build
+
+    # Optional: Run tests if available
+    # - name: Test
+    #   run: pnpm test --if-present
