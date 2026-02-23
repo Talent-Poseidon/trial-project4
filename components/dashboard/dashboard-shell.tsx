@@ -9,6 +9,7 @@ import {
   Shield,
   LogOut,
   ChevronDown,
+  List,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -80,6 +81,19 @@ export function DashboardShell({ user, profile, children }: DashboardShellProps)
               >
                 <Shield className="h-4 w-4" />
                 Admin
+              </Link>
+            )}
+            {profile.role === "admin" && (
+              <Link
+                href="/admin/projects"
+                className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                  pathname === "/admin/projects"
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                <List className="h-4 w-4" />
+                Projects
               </Link>
             )}
           </nav>

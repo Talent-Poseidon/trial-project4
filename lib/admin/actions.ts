@@ -1,49 +1,29 @@
-"use server";
+// lib/admin/actions.ts
 
-import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+export async function createProject(name: string, startDate: Date, endDate: Date) {
+  const response = await fetch('/api/projects', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ name, startDate, endDate }),
+  });
 
-// Helper to check admin
-async function checkAdmin() {
-    const session = await auth();
-    if (!session?.user?.email) throw new Error("Unauthorized");
-    
-    const user = await prisma.user.findUnique({
-        where: { email: session.user.email },
-    });
-    
-    if (!user || user.role !== "admin") throw new Error("Forbidden");
-    return user;
+  if (!response.ok) {
+    throw new Error('Failed to create project');
+  }
+
+  return response.json();
 }
 
-export async function approveUser(userId: string) {
-    await checkAdmin();
-    await prisma.user.update({
-        where: { id: userId },
-        data: { is_approved: true },
-    });
-    revalidatePath("/admin");
-}
+export async function fetchProjects() {
+  const response = await fetch('/api/projects', {
+    method: 'GET',
+  });
 
-export async function revokeUser(userId: string) {
-    await checkAdmin();
-    await prisma.user.update({
-        where: { id: userId },
-        data: { is_approved: false },
-    });
-    revalidatePath("/admin");
-}
+  if (!response.ok) {
+    throw new Error('Failed to fetch projects');
+  }
 
-export async function toggleUserRole(userId: string) {
-    await checkAdmin();
-    const targetUser = await prisma.user.findUnique({ where: { id: userId } });
-    if (!targetUser) return;
-
-    const newRole = targetUser.role === "admin" ? "user" : "admin";
-    await prisma.user.update({
-        where: { id: userId },
-        data: { role: newRole },
-    });
-    revalidatePath("/admin");
+  return response.json();
 }
